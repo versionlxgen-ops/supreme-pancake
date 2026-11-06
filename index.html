@@ -1,0 +1,68 @@
+<html>
+<body>
+    <h3>Chat con MiniMax IA</h3>
+    <p>Escribe tu pregunta o código:</p>
+    <textarea id="prompt" rows="4" cols="60" placeholder="Ej: Fix the bug in this JavaScript function..."></textarea>
+    <br><br>
+    <button id="sendBtn">Enviar</button>
+    <button id="clearBtn">Limpiar</button>
+
+    <h4>Respuesta:</h4>
+    <div id="output" style="white-space: pre-wrap; border: 1px solid #ccc; padding: 10px; min-height: 80px; background: #f9f9f9;"></div>
+
+    <script src="https://js.puter.com/v2/"></script>
+    <script>
+        const promptEl = document.getElementById('prompt');
+        const outputEl = document.getElementById('output');
+        const sendBtn = document.getElementById('sendBtn');
+        const clearBtn = document.getElementById('clearBtn');
+
+        async function askAI() {
+            const text = promptEl.value.trim();
+            if (!text) return;
+
+            outputEl.textContent = 'Escribiendo...';
+            sendBtn.disabled = true;
+
+            try {
+                const response = await puter.ai.chat(
+                    text,
+                    { model: "minimax/minimax-m3.1-flash", reasoning_effort: "low" }
+                );
+
+                // Extraer el texto (puede venir como string u objeto)
+                let reply = typeof response === 'string'
+                    ? response
+                    : (response?.message?.content ?? response?.text ?? JSON.stringify(response));
+
+                if (Array.isArray(reply)) {
+                    reply = reply.map(p => p.text || p.content || '').join('');
+                }
+
+                outputEl.textContent = reply;
+            } catch (err) {
+                outputEl.textContent = '❌ Error: ' + (err?.message || err);
+                console.error(err);
+            } finally {
+                sendBtn.disabled = false;
+            }
+        }
+
+        sendBtn.addEventListener('click', askAI);
+
+        // Enviar con Ctrl+Enter
+        promptEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                askAI();
+            }
+        });
+
+        clearBtn.addEventListener('click', () => {
+            promptEl.value = '';
+            outputEl.textContent = '';
+            promptEl.focus();
+        });
+    </script>
+</body>
+</html>
